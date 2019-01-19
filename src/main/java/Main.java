@@ -208,7 +208,7 @@ public final class Main {
    */
   public static class MyPipeline implements VisionPipeline {
     public Mat outputImg;
-
+    //image size is 120 rows, 160 columns
     @Override
     public void process(Mat inputImg) {
       outputImg = new Mat(inputImg.rows(),inputImg.cols(), inputImg.type());
@@ -219,6 +219,7 @@ public final class Main {
       Imgproc.medianBlur(gray, gray, 5);
 
       outputImg = inputImg;
+      //(input image, output image, process (don't touch),inverse ratio, min distance between centers, edge detector threshold 1, edge detector threshold 2)
       Imgproc.HoughCircles(gray,circles, Imgproc.HOUGH_GRADIENT, 1, 25, 100, 30);
       System.out.println(circles.cols());
       for(int a = 0; a < circles.cols(); a++){

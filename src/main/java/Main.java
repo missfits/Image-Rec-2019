@@ -29,6 +29,10 @@ import edu.wpi.first.vision.VisionThread;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Core;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Scalar;
+import org.opencv.core.Point;
+import org.opencv.core.Size;
 
 /*
    JSON format:
@@ -207,8 +211,21 @@ public final class Main {
 
     @Override
     public void process(Mat inputImg) {
-      Core.flip(inputImg, outputImg, 1);
-      inputImg = outputImg;
+      outputImg = new Mat(inputImg.rows(),inputImg.cols(), inputImg.type());
+      Mat circles = new Mat();
+      Mat gray = new Mat();
+
+      Imgproc.cvtColor(inputImg,gray,Imgproc.COLOR_BGR2GRAY);
+      Imgproc.medianBlur(gray, gray, 5);
+
+      outputImg = inputImg;
+      Imgproc.HoughCircles(gray,circles, Imgproc.HOUGH_GRADIENT, 1, 25, 100, 30);
+      System.out.println(circles.cols());
+      for(int a = 0; a < circles.cols(); a++){
+        double[] c = circles.get(0,a);
+        Point center = new Point(Math.round(c[0]),Math.round(c[1]));
+        Imgproc.circle(outputImg,center,(int)Math.round(c[2]),new Scalar(0,0,255),2);
+      }
     }
   }
 

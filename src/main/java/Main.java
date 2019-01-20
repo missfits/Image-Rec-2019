@@ -221,7 +221,7 @@ public final class Main {
       outputImg = inputImg;
       //(input image, output image, process (don't touch),inverse ratio, min distance between centers, edge detector threshold 1, edge detector threshold 2)
       Imgproc.HoughCircles(gray,circles, Imgproc.HOUGH_GRADIENT, 1, 25, 100, 30);
-      System.out.println(circles.cols());
+      System.out.println("Circles: " + circles.cols());
       for(int a = 0; a < circles.cols(); a++){
         double[] c = circles.get(0,a);
         Point center = new Point(Math.round(c[0]),Math.round(c[1]));
@@ -265,16 +265,17 @@ public final class Main {
     if (cameras.size() >= 1) {
       VisionThread visionThread = new VisionThread(cameras.get(0),
               new MyPipeline(), pipeline -> {
-                outputStream.putFrame(pipeline.outputImg);
+               // outputStream.putFrame(pipeline.outputImg);
         // do something with pipeline results
       });
-      /* something like this for GRIP:
-      VisionThread visionThread = new VisionThread(cameras.get(0),
+      // something like this for GRIP:
+      VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
-        ...
+                outputStream.putFrame(pipeline.outputImg);
       });
-       */
+      
       visionThread.start();
+      visionThread2.start();
     }
 
     // loop forever

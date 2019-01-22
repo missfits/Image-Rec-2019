@@ -96,9 +96,9 @@ public class GripPipeline implements VisionPipeline {
 				}
 				coordGroups.add(currentGroup);
 			}
-			//filtering out groups with > 4 coords
+			//filtering out groups with > 4 coords or with x coords too close
 			for(int a = coordGroups.size() -1; a >= 0; a --){
-				if(coordGroups.get(a).size() != 4){
+				if(coordGroups.get(a).size() != 4 || xTooClose(coordGroups.get(a))){
 					coordGroups.remove(a);
 				}
 			}
@@ -114,28 +114,23 @@ public class GripPipeline implements VisionPipeline {
 				}
 				Imgproc.circle(outputImg, new Point((coordGroups.get(a).get(1).x + coordGroups.get(a).get(2).x)/2, coordGroups.get(a).get(0).y), 1, new Scalar(0,0,255), -1);
 			}
+
 			for(int a = 0; a < coordGroups.size();a++){
 				System.out.println(coordGroups.get(a));
 			}
 		}
-		//iterate through each list, find points w/ same x
-		/*ArrayList<ArrayList<Point>> coordGroups = new ArrayList<ArrayList<Point>>();
-		if(filterContoursOutput.size() == 2){
-			for(int a = 0; a < filterContoursOutput.get(0).toList().size(); a++){
-				ArrayList<Point> currentGroup = new ArrayList<Point>();
-				currentGroup.add(filterContoursOutput.get(0).toList().get(a));
-				//Point pointA = filterContoursOutput.get(0).toList().get(a);
-				for(int b = 0; b < filterContoursOutput.get(1).toList().size(); b ++){
-					//Point pointB = filterContoursOutput.get(1).toList().get(b);
-					if(currentGroup.get(0).y == filterContoursOutput.get(1).toList().get(b).y){
-						currentGroup.add(filterContoursOutput.get(1).toList().get(b));
-						//Imgproc.circle(outputImg, new Point((currentGroup.get(0).x + pointB.x)/2, currentGroup.get(0).y), 1, new Scalar(0,0,255), -1);
-					}
-				}
-			}
-		}*/
 	}
 
+	public boolean xTooClose(ArrayList<Point> points){
+		for(int b = 0; b < points.size(); b ++){
+			for(int c = b; c < points.size(); c++){
+				if(points.get(b).x + 1 == points.get(c).x || points.get(b).x - 1 == points.get(c).x){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	public boolean inOrder(ArrayList<Point> points){
 		return points.get(0).x < points.get(1).x && points.get(1).x < points.get(2).x && points.get(2).x < points.get(3).x;
 	}

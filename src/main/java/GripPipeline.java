@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.HashMap;
+import java.util.Collections;
 
 import org.opencv.core.*;
 import org.opencv.core.Core.*;
@@ -41,7 +42,7 @@ public class GripPipeline implements VisionPipeline {
 		outputImg = source0;
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {77.69784172661869, 91.94538272688412};
+		double[] hslThresholdHue = {29, 91};
 		double[] hslThresholdSaturation = {85.61150787545623, 255.0};
 		double[] hslThresholdLuminance = {0.0, 244.84642191551652};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
@@ -71,15 +72,72 @@ public class GripPipeline implements VisionPipeline {
 		double filterContoursMinRatio = 0;
 		double filterContoursMaxRatio = 1000;
 		filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio, filterContoursOutput);
-		if(filterContoursContours.size() >= 1){
-			System.out.println(filterContoursContours.get(0).toList());
-		}
 		System.out.println("Countours: " + filterContoursOutput.size());
+		for(int a = 0; a < filterContoursOutput.size(); a ++){
+			System.out.println(filterContoursOutput.get(a).toList());
+		}
 		Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 		for (int i = 0; i <  filterContoursOutput.size(); i++){
 			Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
-
 		}
+		if(filterContoursOutput.size() == 2){
+			ArrayList<Point> allPoints = new ArrayList<Point>();
+			allPoints.addAll(filterContoursOutput.get(0).toList());
+			allPoints.addAll(filterContoursOutput.get(1).toList());
+			//finding points with same y, collecting them into lists
+			ArrayList<ArrayList<Point>> coordGroups = new ArrayList<ArrayList<Point>>();
+			for(int a = 0; a < filterContoursOutput.get(0).toList().size(); a ++){
+				ArrayList<Point> currentGroup = new ArrayList<Point>();
+				currentGroup.add(filterContoursOutput.get(0).toList().get(a));
+				for(int b = 0; b < allPoints.size(); b ++){
+					if(allPoints.get(b).y == currentGroup.get(0).y && !allPoints.get(b).equals(currentGroup.get(0))){
+						currentGroup.add(allPoints.get(b));
+					}
+				}
+				coordGroups.add(currentGroup);
+			}
+			//filtering out groups with > 4 coords
+			for(int a = coordGroups.size() -1; a >= 0; a --){
+				if(coordGroups.get(a).size() != 4){
+					coordGroups.remove(a);
+				}
+			}
+			//putting coords in each group in ascending x coordinate order
+			for(int a = 0; a < coordGroups.size(); a++){
+				while(!inOrder(coordGroups.get(a))){
+					for(int b = 0; b < coordGroups.get(a).size() -1; b ++){
+						if(coordGroups.get(a).get(b).x > coordGroups.get(a).get(b + 1).x){
+							Collections.swap(coordGroups.get(a), b, b+1);
+							break;
+						}
+					}
+				}
+				Imgproc.circle(outputImg, new Point((coordGroups.get(a).get(1).x + coordGroups.get(a).get(2).x)/2, coordGroups.get(a).get(0).y), 1, new Scalar(0,0,255), -1);
+			}
+			for(int a = 0; a < coordGroups.size();a++){
+				System.out.println(coordGroups.get(a));
+			}
+		}
+		//iterate through each list, find points w/ same x
+		/*ArrayList<ArrayList<Point>> coordGroups = new ArrayList<ArrayList<Point>>();
+		if(filterContoursOutput.size() == 2){
+			for(int a = 0; a < filterContoursOutput.get(0).toList().size(); a++){
+				ArrayList<Point> currentGroup = new ArrayList<Point>();
+				currentGroup.add(filterContoursOutput.get(0).toList().get(a));
+				//Point pointA = filterContoursOutput.get(0).toList().get(a);
+				for(int b = 0; b < filterContoursOutput.get(1).toList().size(); b ++){
+					//Point pointB = filterContoursOutput.get(1).toList().get(b);
+					if(currentGroup.get(0).y == filterContoursOutput.get(1).toList().get(b).y){
+						currentGroup.add(filterContoursOutput.get(1).toList().get(b));
+						//Imgproc.circle(outputImg, new Point((currentGroup.get(0).x + pointB.x)/2, currentGroup.get(0).y), 1, new Scalar(0,0,255), -1);
+					}
+				}
+			}
+		}*/
+	}
+
+	public boolean inOrder(ArrayList<Point> points){
+		return points.get(0).x < points.get(1).x && points.get(1).x < points.get(2).x && points.get(2).x < points.get(3).x;
 	}
 
 	/**

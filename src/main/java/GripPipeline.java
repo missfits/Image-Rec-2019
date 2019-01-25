@@ -81,53 +81,30 @@ public class GripPipeline implements VisionPipeline {
 			Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
 		}
 		if(filterContoursOutput.size() == 2){
-			ArrayList<Point> allPoints = new ArrayList<Point>();
-			allPoints.addAll(filterContoursOutput.get(0).toList());
-			allPoints.addAll(filterContoursOutput.get(1).toList());
-			//finding points with same y, collecting them into lists
-			ArrayList<ArrayList<Point>> coordGroups = new ArrayList<ArrayList<Point>>();
-			for(int a = 0; a < filterContoursOutput.get(0).toList().size(); a ++){
-				ArrayList<Point> currentGroup = new ArrayList<Point>();
-				currentGroup.add(filterContoursOutput.get(0).toList().get(a));
-				for(int b = 0; b < allPoints.size(); b ++){
-					if(allPoints.get(b).y == currentGroup.get(0).y && !allPoints.get(b).equals(currentGroup.get(0))){
-						currentGroup.add(allPoints.get(b));
-					}
-				}
-				coordGroups.add(currentGroup);
-			}
-			System.out.println("same y lists");
-			//filtering out groups with x coords too close
-			for(int a = coordGroups.size() -1; a >= 0; a --){
-				if(coordGroups.get(a).size() <= 1 || xTooClose(coordGroups.get(a))){
-					coordGroups.remove(a);
+			ArrayList<Point> c1Points = new ArrayList<Point>();
+			c1Points.addAll(filterContoursOutput.get(0).toList());
+			ArrayList<Point> c2Points = new ArrayList<Point>();
+			c2Points.addAll(filterContoursOutput.get(1).toList());
+
+			ArrayList<Point> leftContour = c1Points.get(0).x < c2Points.get(0).x? c1Points : c2Points;
+			ArrayList<Point> rightContour = c1Points.get(0).x < c2Points.get(0).x? c2Points: c1Points;
+
+			double leftLargestX = leftContour.get(0).x;
+			for(int a = 1; a < leftContour.size(); a ++){
+				if(leftLargestX < leftContour.get(a).x){
+					leftLargestX = leftContour.get(a).x;
 				}
 			}
-			System.out.println("filtered out bad lists");
-			//putting coords in each group in ascending x coordinate order
-			for(int a = 0; a < coordGroups.size(); a++){
-				while(!inOrder(coordGroups.get(a))){
-					for(int b = 0; b < coordGroups.get(a).size() -1; b ++){
-						if(coordGroups.get(a).get(b).x > coordGroups.get(a).get(b + 1).x){
-							Collections.swap(coordGroups.get(a), b, b+1);
-							break;
-						}
-					}
+			double rightSmallestX = rightContour.get(0).x;
+			for(int a = 1; a < rightContour.size(); a ++){
+				if(rightSmallestX > rightContour.get(a).x){
+					rightSmallestX = rightContour.get(a).x;
 				}
-				int index = largestDistanceIndex(coordGroups.get(a));
-				Imgproc.circle(outputImg, new Point((coordGroups.get(a).get(index).x + coordGroups.get(a).get(index + 1 ).x)/2, coordGroups.get(a).get(0).y), 1, new Scalar(0,0,255), -1);
 			}
-			System.out.println("ascending order");
-			/*if(coordGroups.size() > 0){
-				int centerDist = 60 - (int)Math.round((coordGroups.get(0).get(1).x + coordGroups.get(0).get(2).x)/2);
-				System.out.println("Turn: " + (centerDist == 0? 0 : centerDist/Math.abs(centerDist)));
-			}*/
-			/*for(int a = 0; a < coordGroups.size();a++){
-				System.out.println(coordGroups.get(a));
-			}*/
+			Imgproc.circle(outputImg, new Point((rightSmallestX + leftLargestX)/2, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
 		}
 	}
-//{52.0, 42.0}, {61.0, 42.0}, {63.0, 42.0}, {138.0, 42.0}, {140.0, 42.0}
+
 	public int largestDistanceIndex(ArrayList<Point> points){
 		double largestDist = 0;
 		int index = 0;

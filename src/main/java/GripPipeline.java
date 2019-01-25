@@ -42,9 +42,9 @@ public class GripPipeline implements VisionPipeline {
 		outputImg = source0;
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {29, 91};
-		double[] hslThresholdSaturation = {85.61150787545623, 255.0};
-		double[] hslThresholdLuminance = {0.0, 244.84642191551652};
+		double[] hslThresholdHue = {57, 93};
+		double[] hslThresholdSaturation = {135, 255};
+		double[] hslThresholdLuminance = {11, 244.84642191551652};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Blur0:
@@ -73,9 +73,9 @@ public class GripPipeline implements VisionPipeline {
 		double filterContoursMaxRatio = 1000;
 		filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio, filterContoursOutput);
 		System.out.println("Countours: " + filterContoursOutput.size());
-		for(int a = 0; a < filterContoursOutput.size(); a ++){
+		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
-		}
+		}*/
 		Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 		for (int i = 0; i <  filterContoursOutput.size(); i++){
 			Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
@@ -96,12 +96,14 @@ public class GripPipeline implements VisionPipeline {
 				}
 				coordGroups.add(currentGroup);
 			}
-			//filtering out groups with > 4 coords or with x coords too close
+			System.out.println("same y lists");
+			//filtering out groups with x coords too close
 			for(int a = coordGroups.size() -1; a >= 0; a --){
-				if(coordGroups.get(a).size() != 4 || xTooClose(coordGroups.get(a))){
+				if(coordGroups.get(a).size() <= 1 || xTooClose(coordGroups.get(a))){
 					coordGroups.remove(a);
 				}
 			}
+			System.out.println("filtered out bad lists");
 			//putting coords in each group in ascending x coordinate order
 			for(int a = 0; a < coordGroups.size(); a++){
 				while(!inOrder(coordGroups.get(a))){
@@ -112,27 +114,52 @@ public class GripPipeline implements VisionPipeline {
 						}
 					}
 				}
-				Imgproc.circle(outputImg, new Point((coordGroups.get(a).get(1).x + coordGroups.get(a).get(2).x)/2, coordGroups.get(a).get(0).y), 1, new Scalar(0,0,255), -1);
+				int index = largestDistanceIndex(coordGroups.get(a));
+				Imgproc.circle(outputImg, new Point((coordGroups.get(a).get(index).x + coordGroups.get(a).get(index + 1 ).x)/2, coordGroups.get(a).get(0).y), 1, new Scalar(0,0,255), -1);
 			}
-
-			for(int a = 0; a < coordGroups.size();a++){
+			System.out.println("ascending order");
+			/*if(coordGroups.size() > 0){
+				int centerDist = 60 - (int)Math.round((coordGroups.get(0).get(1).x + coordGroups.get(0).get(2).x)/2);
+				System.out.println("Turn: " + (centerDist == 0? 0 : centerDist/Math.abs(centerDist)));
+			}*/
+			/*for(int a = 0; a < coordGroups.size();a++){
 				System.out.println(coordGroups.get(a));
+			}*/
+		}
+	}
+//{52.0, 42.0}, {61.0, 42.0}, {63.0, 42.0}, {138.0, 42.0}, {140.0, 42.0}
+	public int largestDistanceIndex(ArrayList<Point> points){
+		double largestDist = 0;
+		int index = 0;
+		for(int a = 0; a < points.size() - 1; a ++){
+			if(points.get(a + 1).x - points.get(a).x > largestDist){
+				largestDist = points.get(a + 1).x - points.get(a).x;
+				index = a;
 			}
 		}
+		return index;
 	}
 
 	public boolean xTooClose(ArrayList<Point> points){
 		for(int b = 0; b < points.size(); b ++){
-			for(int c = b; c < points.size(); c++){
-				if(points.get(b).x + 1 == points.get(c).x || points.get(b).x - 1 == points.get(c).x){
+			for(int c = b + 1; c < points.size(); c++){
+				if(Math.abs(points.get(b).x - points.get(c).x) <= 1){
 					return true;
 				}
 			}
 		}
 		return false;
 	}
-	public boolean inOrder(ArrayList<Point> points){
+	/*public boolean inOrder(ArrayList<Point> points){
 		return points.get(0).x < points.get(1).x && points.get(1).x < points.get(2).x && points.get(2).x < points.get(3).x;
+	}*/
+	public boolean inOrder(ArrayList<Point> points){
+		for(int a = 0; a < points.size() - 1; a++){
+			if(points.get(a).x >= points.get(a + 1).x){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**

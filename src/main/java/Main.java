@@ -221,7 +221,7 @@ public final class Main {
       outputImg = inputImg;
       //(input image, output image, process (don't touch),inverse ratio, min distance between centers, edge detector threshold 1, edge detector threshold 2)
       Imgproc.HoughCircles(gray,circles, Imgproc.HOUGH_GRADIENT, 1, 25, 100, 30);
-      System.out.println("Circles: " + circles.cols());
+      //System.out.println("Circles: " + circles.cols());
       for(int a = 0; a < circles.cols(); a++){
         double[] c = circles.get(0,a);
         Point center = new Point(Math.round(c[0]),Math.round(c[1]));

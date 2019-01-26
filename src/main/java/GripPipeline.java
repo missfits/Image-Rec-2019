@@ -38,6 +38,7 @@ public class GripPipeline implements VisionPipeline {
 	/**
 	 * This is the primary method that runs the entire pipeline and updates the outputs.
 	 */
+	public double offSet;
 	public void process(Mat source0) {
 		outputImg = source0;
 		// Step HSL_Threshold0:
@@ -72,7 +73,7 @@ public class GripPipeline implements VisionPipeline {
 		double filterContoursMinRatio = 0;
 		double filterContoursMaxRatio = 1000;
 		filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio, filterContoursOutput);
-		System.out.println("Countours: " + filterContoursOutput.size());
+		//System.out.println("Countours: " + filterContoursOutput.size());
 		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
@@ -101,7 +102,9 @@ public class GripPipeline implements VisionPipeline {
 					rightSmallestX = rightContour.get(a).x;
 				}
 			}
-			Imgproc.circle(outputImg, new Point((rightSmallestX + leftLargestX)/2, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
+			double midpoint = (rightSmallestX + leftLargestX)/2;
+			Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
+			offSet = 0.5 - (midpoint/outputImg.width());
 		}
 	}
 

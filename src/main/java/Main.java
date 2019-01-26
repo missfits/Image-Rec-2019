@@ -259,7 +259,7 @@ public final class Main {
       cameras.add(startCamera(cameraConfig));
     }
 
-    CvSource outputStream = CameraServer.getInstance().putVideo("Test", 640, 480); 
+    CvSource outputStream = CameraServer.getInstance().putVideo("Test", 416, 240); 
 
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {

@@ -42,9 +42,9 @@ public class GripPipeline implements VisionPipeline {
 		outputImg = source0;
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {57, 93};
-		double[] hslThresholdSaturation = {135, 255};
-		double[] hslThresholdLuminance = {11, 244.84642191551652};
+		double[] hslThresholdHue = {78, 92};
+		double[] hslThresholdSaturation = {86, 255};
+		double[] hslThresholdLuminance = {83, 245};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Blur0:

@@ -272,6 +272,7 @@ public final class Main {
       VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
                 outputStream.putFrame(pipeline.outputImg);
+                ntinst.getTable("RaspberryPi").getEntry("Offset").setNumber(pipeline.offSet);
       });
       
       visionThread.start();

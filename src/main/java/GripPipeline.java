@@ -77,6 +77,7 @@ public class GripPipeline implements VisionPipeline {
 		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
+		Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
 		Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 		for (int i = 0; i <  filterContoursOutput.size(); i++){
 			Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));

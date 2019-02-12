@@ -36,7 +36,7 @@ public class GripPipeline implements VisionPipeline {
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
 	public Mat outputImg = new Mat();
-	private NetworkTable table = NetworkTableInstance.getDefault().getTable("Raspberry Pi");
+	private NetworkTable table = NetworkTableInstance.getDefault().getTable("RaspberryPi");
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}

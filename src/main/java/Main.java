@@ -263,11 +263,11 @@ public final class Main {
     
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {
-      VisionThread visionThread = new VisionThread(cameras.get(0),
+     /* VisionThread visionThread = new VisionThread(cameras.get(0),
               new MyPipeline(), pipeline -> {
                // outputStream.putFrame(pipeline.outputImg);
         // do something with pipeline results
-      });
+      });*/
       // something like this for GRIP:
       VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
@@ -280,7 +280,7 @@ public final class Main {
                 ntinst.getTable("RaspberryPi").getEntry("Offset").setNumber(pipeline.offSet);
       });
       
-      visionThread.start();
+      //visionThread.start();
       visionThread2.start();
     }
 

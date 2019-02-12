@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+//import com.sun.org.apache.bcel.internal.generic.NameSignatureInstruction;
+
 import java.util.HashMap;
 import java.util.Collections;
 
@@ -15,6 +18,8 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
 import org.opencv.objdetect.*;
 import edu.wpi.first.vision.VisionPipeline;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.NetworkTable;
 
 /**
 * GripPipeline class.
@@ -31,6 +36,7 @@ public class GripPipeline implements VisionPipeline {
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
 	public Mat outputImg = new Mat();
+	private NetworkTable table = NetworkTableInstance.getDefault().getTable("Raspberry Pi");
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
@@ -77,35 +83,38 @@ public class GripPipeline implements VisionPipeline {
 		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
-		Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
-		Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
-		for (int i = 0; i <  filterContoursOutput.size(); i++){
-			Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
-		}
-		if(filterContoursOutput.size() == 2){
-			ArrayList<Point> c1Points = new ArrayList<Point>();
-			c1Points.addAll(filterContoursOutput.get(0).toList());
-			ArrayList<Point> c2Points = new ArrayList<Point>();
-			c2Points.addAll(filterContoursOutput.get(1).toList());
-
-			ArrayList<Point> leftContour = c1Points.get(0).x < c2Points.get(0).x? c1Points : c2Points;
-			ArrayList<Point> rightContour = c1Points.get(0).x < c2Points.get(0).x? c2Points: c1Points;
-
-			double leftLargestX = leftContour.get(0).x;
-			for(int a = 1; a < leftContour.size(); a ++){
-				if(leftLargestX < leftContour.get(a).x){
-					leftLargestX = leftContour.get(a).x;
-				}
+		if(table.getEntry("Vision Mode").getBoolean(false)){
+			Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
+			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
+			for (int i = 0; i <  filterContoursOutput.size(); i++){
+				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
 			}
-			double rightSmallestX = rightContour.get(0).x;
-			for(int a = 1; a < rightContour.size(); a ++){
-				if(rightSmallestX > rightContour.get(a).x){
-					rightSmallestX = rightContour.get(a).x;
+			table.getEntry("Right Contour Number").setNumber(filterContoursOutput.size());
+			if(filterContoursOutput.size() == 2){
+				ArrayList<Point> c1Points = new ArrayList<Point>();
+				c1Points.addAll(filterContoursOutput.get(0).toList());
+				ArrayList<Point> c2Points = new ArrayList<Point>();
+				c2Points.addAll(filterContoursOutput.get(1).toList());
+
+				ArrayList<Point> leftContour = c1Points.get(0).x < c2Points.get(0).x? c1Points : c2Points;
+				ArrayList<Point> rightContour = c1Points.get(0).x < c2Points.get(0).x? c2Points: c1Points;
+
+				double leftLargestX = leftContour.get(0).x;
+				for(int a = 1; a < leftContour.size(); a ++){
+					if(leftLargestX < leftContour.get(a).x){
+						leftLargestX = leftContour.get(a).x;
+					}
 				}
+				double rightSmallestX = rightContour.get(0).x;
+				for(int a = 1; a < rightContour.size(); a ++){
+					if(rightSmallestX > rightContour.get(a).x){
+						rightSmallestX = rightContour.get(a).x;
+					}
+				}
+				double midpoint = (rightSmallestX + leftLargestX)/2;
+				Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
+				offSet = 0.5 - (midpoint/outputImg.width());
 			}
-			double midpoint = (rightSmallestX + leftLargestX)/2;
-			Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
-			offSet = 0.5 - (midpoint/outputImg.width());
 		}
 	}
 

@@ -185,12 +185,12 @@ public final class Main {
   /**
    * Start running the camera.
    */
-  public static VideoSource startCamera(CameraConfig config) {
+  public static UsbCamera startCamera(CameraConfig config) {
     System.out.println("Starting camera '" + config.name + "' on " + config.path);
     CameraServer inst = CameraServer.getInstance();
     UsbCamera camera = new UsbCamera(config.name, config.path);
     MjpegServer server = inst.startAutomaticCapture(camera);
-
+    
     Gson gson = new GsonBuilder().create();
 
     camera.setConfigJson(gson.toJson(config.config));
@@ -242,7 +242,7 @@ public final class Main {
     if (!readConfig()) {
       return;
     }
-
+    
     // start NetworkTables
     NetworkTableInstance ntinst = NetworkTableInstance.getDefault();
     if (server) {
@@ -252,15 +252,15 @@ public final class Main {
       System.out.println("Setting up NetworkTables client for team " + team);
       ntinst.startClientTeam(team);
     }
-
+    
     // start cameras
-    List<VideoSource> cameras = new ArrayList<>();
+    List<UsbCamera> cameras = new ArrayList<>();
     for (CameraConfig cameraConfig : cameraConfigs) {
       cameras.add(startCamera(cameraConfig));
     }
 
     CvSource outputStream = CameraServer.getInstance().putVideo("Test", 416, 240); 
-
+    
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {
       VisionThread visionThread = new VisionThread(cameras.get(0),
@@ -272,6 +272,11 @@ public final class Main {
       VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
                 outputStream.putFrame(pipeline.outputImg);
+                 //controlling camera exposure
+                  //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);
+                  if(ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").getBoolean(false)){
+                    cameras.get(0).setExposureManual(10);
+                  }
                 ntinst.getTable("RaspberryPi").getEntry("Offset").setNumber(pipeline.offSet);
       });
       

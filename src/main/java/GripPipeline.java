@@ -67,11 +67,11 @@ public class GripPipeline implements VisionPipeline {
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
-		double filterContoursMinArea = 100.0;
+		double filterContoursMinArea = 10.0;
 		double filterContoursMinPerimeter = 0;
 		double filterContoursMinWidth = 0;
 		double filterContoursMaxWidth = 1000;
-		double filterContoursMinHeight = 24.0;
+		double filterContoursMinHeight = 5.0;
 		double filterContoursMaxHeight = 1000;
 		double[] filterContoursSolidity = {59.95203007897024, 100.0};
 		double filterContoursMaxVertices = 1000000;
@@ -83,13 +83,13 @@ public class GripPipeline implements VisionPipeline {
 		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
-		if(table.getEntry("Vision Mode").getBoolean(false)){
+		if(table.getEntry("Vision Mode").getBoolean(true)){
 			Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
 			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 			for (int i = 0; i <  filterContoursOutput.size(); i++){
 				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
 			}
-			table.getEntry("Right Contour Number").setNumber(filterContoursOutput.size());
+			table.getEntry("Contour Number").setNumber(filterContoursOutput.size());
 			if(filterContoursOutput.size() == 2){
 				ArrayList<Point> c1Points = new ArrayList<Point>();
 				c1Points.addAll(filterContoursOutput.get(0).toList());

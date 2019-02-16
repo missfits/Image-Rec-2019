@@ -274,8 +274,10 @@ public final class Main {
                 outputStream.putFrame(pipeline.outputImg);
                  //controlling camera exposure
                   //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);
-                  if(ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false)){
+                  if(ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(true)){
                     cameras.get(0).setExposureManual(10);
+                  }else{
+                    cameras.get(0).setExposureAuto();
                   }
                 ntinst.getTable("RaspberryPi").getEntry("Offset").setNumber(pipeline.offSet);
       });

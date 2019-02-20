@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.Comparator;
 
 import org.opencv.core.*;
 import org.opencv.core.Core.*;
@@ -90,11 +91,15 @@ public class GripPipeline implements VisionPipeline {
 				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
 			}
 			table.getEntry("Contour Number").setNumber(filterContoursOutput.size());
-			if(filterContoursOutput.size() == 2){
+			if(filterContoursOutput.size() >= 2){
+				MatOfPoint[] targets = new MatOfPoint[2];
+				filterContoursOutput.sort(Comparator.comparingDouble((c) -> getDistFromCenter(c)));
+				targets[0] = filterContoursOutput.get(0);
+				targets[1] = filterContoursOutput.get(1);
 				ArrayList<Point> c1Points = new ArrayList<Point>();
-				c1Points.addAll(filterContoursOutput.get(0).toList());
+				c1Points.addAll(targets[0].toList());
 				ArrayList<Point> c2Points = new ArrayList<Point>();
-				c2Points.addAll(filterContoursOutput.get(1).toList());
+				c2Points.addAll(targets[1].toList());
 
 				ArrayList<Point> leftContour = c1Points.get(0).x < c2Points.get(0).x? c1Points : c2Points;
 				ArrayList<Point> rightContour = c1Points.get(0).x < c2Points.get(0).x? c2Points: c1Points;
@@ -117,7 +122,9 @@ public class GripPipeline implements VisionPipeline {
 			}
 		}
 	}
-
+	public double getDistFromCenter(MatOfPoint contour){
+		return Math.abs(contour.toList().get(0).x -outputImg.width()/2);
+	}
 	public int largestDistanceIndex(ArrayList<Point> points){
 		double largestDist = 0;
 		int index = 0;

@@ -45,7 +45,7 @@ public class GripPipeline implements VisionPipeline {
 	/**
 	 * This is the primary method that runs the entire pipeline and updates the outputs.
 	 */
-	public double offSet;
+	public double midOffset, sideOffset;
 	public void process(Mat source0) {
 		outputImg = source0;
 		// Step HSL_Threshold0:
@@ -85,7 +85,8 @@ public class GripPipeline implements VisionPipeline {
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
 		if(table.getEntry("Vision Mode").getBoolean(true)){
-			Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
+			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 2);
+			//Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
 			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 			for (int i = 0; i <  filterContoursOutput.size(); i++){
 				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
@@ -117,10 +118,21 @@ public class GripPipeline implements VisionPipeline {
 					}
 				}
 				double midpoint = (rightSmallestX + leftLargestX)/2;
-				Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
-				offSet = 0.5 - (midpoint/outputImg.width());
+				Imgproc.line(outputImg, new Point(midpoint,0), new Point(midpoint, outputImg.height()),new Scalar (0, 0, 255), 2);
+				//Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
+				//negative if center is to the left of midpoint
+				midOffset = 0.5 - (midpoint/outputImg.width());
+				//if offset is positive, want right contour
+				sideOffset = 0.5 - (findAverageX(midOffset > 0? rightContour : leftContour)/outputImg.width());
 			}
 		}
+	}
+	public double findAverageX(ArrayList<Point> points){
+		double sum = 0;
+		for(Point a : points){
+			sum += a.x;
+		}
+		return sum/points.size();
 	}
 	public double getDistFromCenter(MatOfPoint contour){
 		return Math.abs(contour.toList().get(0).x -outputImg.width()/2);

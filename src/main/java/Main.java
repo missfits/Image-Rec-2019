@@ -279,7 +279,8 @@ public final class Main {
                   }else{
                     cameras.get(0).setExposureAuto();
                   }
-                ntinst.getTable("RaspberryPi").getEntry("Offset").setNumber(pipeline.offSet);
+                ntinst.getTable("RaspberryPi").getEntry("Center Offset").setNumber(pipeline.midOffset);
+                ntinst.getTable("RaspberryPi").getEntry("Side Offset").setNumber(pipeline.sideOffset);
       });
       
       //visionThread.start();

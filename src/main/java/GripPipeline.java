@@ -48,6 +48,7 @@ public class GripPipeline implements VisionPipeline {
 	public double midOffset, sideOffset;
 	public void process(Mat source0) {
 		outputImg = source0;
+		Core.flip(outputImg,outputImg,1);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = source0;
 		double[] hslThresholdHue = {53, 85};

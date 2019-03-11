@@ -47,11 +47,11 @@ public class GripPipeline implements VisionPipeline {
 	 */
 	public double midOffset, sideOffset;
 	public void process(Mat source0) {
-		outputImg = source0;
-		Core.flip(outputImg,outputImg,1);
+		//outputImg = source0;
+		Core.flip(source0,outputImg,-1);
 		// Step HSL_Threshold0:
-		Mat hslThresholdInput = source0;
-		double[] hslThresholdHue = {53, 85};
+		Mat hslThresholdInput = outputImg;
+		double[] hslThresholdHue = {64,111};
 		double[] hslThresholdSaturation = {193, 255};
 		double[] hslThresholdLuminance = {78, 245};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
@@ -86,7 +86,7 @@ public class GripPipeline implements VisionPipeline {
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
 		if(table.getEntry("Vision Mode").getBoolean(true)){
-			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 2);
+			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 1);
 			//Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
 			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 			for (int i = 0; i <  filterContoursOutput.size(); i++){
@@ -119,7 +119,7 @@ public class GripPipeline implements VisionPipeline {
 					}
 				}
 				double midpoint = (rightSmallestX + leftLargestX)/2;
-				Imgproc.line(outputImg, new Point(midpoint,0), new Point(midpoint, outputImg.height()),new Scalar (0, 0, 255), 2);
+				Imgproc.line(outputImg, new Point(midpoint,0), new Point(midpoint, outputImg.height()),new Scalar (0, 0, 255), 1);
 				//Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
 				//negative if center is to the left of midpoint
 				midOffset = 0.5 - (midpoint/outputImg.width());

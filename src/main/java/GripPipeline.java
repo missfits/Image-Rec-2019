@@ -52,7 +52,7 @@ public class GripPipeline implements VisionPipeline {
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = outputImg;
 		double[] hslThresholdHue = {64,111};
-		double[] hslThresholdSaturation = {193, 255};
+		double[] hslThresholdSaturation = {86, 255};
 		double[] hslThresholdLuminance = {78, 245};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
@@ -85,7 +85,7 @@ public class GripPipeline implements VisionPipeline {
 		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
 			System.out.println(filterContoursOutput.get(a).toList());
 		}*/
-		if(table.getEntry("Vision Mode").getBoolean(true)){
+		if(table.getEntry("Vision Mode").getBoolean(false)){
 			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 1);
 			//Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
 			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));

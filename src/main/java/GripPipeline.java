@@ -95,9 +95,21 @@ public class GripPipeline implements VisionPipeline {
 			table.getEntry("Contour Number").setNumber(filterContoursOutput.size());
 			if(filterContoursOutput.size() >= 2){
 				MatOfPoint[] targets = new MatOfPoint[2];
-				filterContoursOutput.sort(Comparator.comparingDouble((c) -> getDistFromCenter(c)));
-				targets[0] = filterContoursOutput.get(0);
-				targets[1] = filterContoursOutput.get(1);
+				if(filterContoursOutput.size() == 2){
+					targets[0] = filterContoursOutput.get(0);
+					targets[1] = filterContoursOutput.get(1);
+				}else{
+					filterContoursOutput.sort(Comparator.comparingDouble((c) -> getDistFromCenter(c)));
+					//get middle 2 contours
+					targets[0] = filterContoursOutput.get(filterContoursOutput.size()/2);
+					targets[1] = filterContoursOutput.get(filterContoursOutput.size()/2 + 1);
+					//if chosen contours are \ /, shift left in the list of contours
+					if(!(isTiltedClockwise(targets[0]) && !isTiltedClockwise(targets[1]))){
+						targets[1] = targets[0];
+						targets[0] = filterContoursOutput.get(filterContoursOutput.size()/2 - 1);
+					}
+				}
+				
 				ArrayList<Point> c1Points = new ArrayList<Point>();
 				c1Points.addAll(targets[0].toList());
 				ArrayList<Point> c2Points = new ArrayList<Point>();
@@ -120,7 +132,6 @@ public class GripPipeline implements VisionPipeline {
 				}
 				double midpoint = (rightSmallestX + leftLargestX)/2;
 				Imgproc.line(outputImg, new Point(midpoint,0), new Point(midpoint, outputImg.height()),new Scalar (0, 0, 255), 1);
-				//Imgproc.circle(outputImg, new Point(midpoint, outputImg.height()/2), 2, new Scalar (0, 0, 255), -1);
 				//negative if center is to the left of midpoint
 				midOffset = 0.5 - (midpoint/outputImg.width());
 				//if offset is positive, want right contour
@@ -135,8 +146,29 @@ public class GripPipeline implements VisionPipeline {
 		}
 		return sum/points.size();
 	}
+	
+	public boolean isTiltedClockwise(MatOfPoint contour){
+		//sorting points in contour by ascending y coordinate & storing them in pointsList
+		ArrayList<Point> pointsList = new ArrayList<Point>(contour.toList());
+		pointsList.sort(Comparator.comparingDouble((c) -> c.y));
+		//putting top 25% of points in one ArrayList, bottom 25% in another
+		ArrayList<Point> topPoints = new ArrayList<Point>();
+		ArrayList<Point> bottomPoints = new ArrayList<Point>();
+		for(int a = 0; a < pointsList.size()/4; a++){
+			bottomPoints.add(pointsList.get(a));
+			topPoints.add(pointsList.get(pointsList.size() - 1 - a));
+		}
+		//sorting top & bottom point lists by ascending x coordinate
+		bottomPoints.sort(Comparator.comparingDouble((c) -> c.x));
+		topPoints.sort(Comparator.comparingDouble((c) -> c.x));
+		//deciding whether to check for leftmost or rightmost points in contour
+		int pointIndex = getDistFromCenter(contour) <= 0 ? bottomPoints.size() - 1 : 0;
+		//seeing if bottom points are to the left or right of top points (/ or \)
+		return bottomPoints.get(pointIndex).x - topPoints.get(pointIndex).x <= 0;
+	}
 	public double getDistFromCenter(MatOfPoint contour){
-		return Math.abs(contour.toList().get(0).x -outputImg.width()/2);
+		//negative if left of center, positive if right
+		return contour.toList().get(0).x -outputImg.width()/2;
 	}
 	public int largestDistanceIndex(ArrayList<Point> points){
 		double largestDist = 0;

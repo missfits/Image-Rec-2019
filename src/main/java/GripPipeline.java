@@ -51,15 +51,15 @@ public class GripPipeline implements VisionPipeline {
 		Core.flip(source0,outputImg,-1);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = outputImg;
-		double[] hslThresholdHue = {64,111};
-		double[] hslThresholdSaturation = {86, 255};
-		double[] hslThresholdLuminance = {78, 245};
+		double[] hslThresholdHue = {30, 125};
+		double[] hslThresholdSaturation = {51, 255};
+		double[] hslThresholdLuminance = {165, 255};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Blur0:
 		Mat blurInput = hslThresholdOutput;
-		BlurType blurType = BlurType.get("Gaussian Blur");
-		double blurRadius = 0.600600188916868;
+		BlurType blurType = BlurType.get("Box Blur");
+		double blurRadius = 2;
 		blur(blurInput, blurType, blurRadius, blurOutput);
 
 		// Step Find_Contours0:
@@ -69,7 +69,7 @@ public class GripPipeline implements VisionPipeline {
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
-		double filterContoursMinArea = 10.0;
+		double filterContoursMinArea = 60.0;
 		double filterContoursMinPerimeter = 0;
 		double filterContoursMinWidth = 0;
 		double filterContoursMaxWidth = 1000;
@@ -88,9 +88,9 @@ public class GripPipeline implements VisionPipeline {
 		if(table.getEntry("Vision Mode").getBoolean(false)){
 			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 1);
 			//Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
-			Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
+			//Imgproc.drawContours(outputImg, filterContoursOutput, 0, new Scalar(0,0,255));
 			for (int i = 0; i <  filterContoursOutput.size(); i++){
-				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(0,0,255));
+				Imgproc.drawContours(outputImg, filterContoursOutput, i , new Scalar(isTiltedClockwise(filterContoursOutput.get(i))? 0 : 255,0,255));
 			}
 			table.getEntry("Contour Number").setNumber(filterContoursOutput.size());
 			if(filterContoursOutput.size() >= 2){
@@ -101,13 +101,14 @@ public class GripPipeline implements VisionPipeline {
 				}else{
 					filterContoursOutput.sort(Comparator.comparingDouble((c) -> getDistFromCenter(c)));
 					//get middle 2 contours
-					targets[0] = filterContoursOutput.get(filterContoursOutput.size()/2);
-					targets[1] = filterContoursOutput.get(filterContoursOutput.size()/2 + 1);
+					int center = centerIndex(filterContoursOutput);
+					targets[0] = filterContoursOutput.get(center);
+					targets[1] = filterContoursOutput.get(center + (isTiltedClockwise(targets[0]) ? 1 : -1));
 					//if chosen contours are \ /, shift left in the list of contours
-					if(!(isTiltedClockwise(targets[0]) && !isTiltedClockwise(targets[1]))){
+					/*if(!(isTiltedClockwise(targets[0]) && !isTiltedClockwise(targets[1]))){
 						targets[1] = targets[0];
 						targets[0] = filterContoursOutput.get(filterContoursOutput.size()/2 - 1);
-					}
+					}*/
 				}
 				
 				ArrayList<Point> c1Points = new ArrayList<Point>();
@@ -139,6 +140,16 @@ public class GripPipeline implements VisionPipeline {
 			}
 		}
 	}
+	public int centerIndex(ArrayList<MatOfPoint> contours){
+		int index = 0;
+		for(int a = 0; a < contours.size(); a++){
+			if(Math.abs(getDistFromCenter(contours.get(a))) < Math.abs(getDistFromCenter(contours.get(index)))){
+				index = a;
+			}
+		}
+		return index;
+	}
+
 	public double findAverageX(ArrayList<Point> points){
 		double sum = 0;
 		for(Point a : points){
@@ -150,21 +161,23 @@ public class GripPipeline implements VisionPipeline {
 	public boolean isTiltedClockwise(MatOfPoint contour){
 		//sorting points in contour by ascending y coordinate & storing them in pointsList
 		ArrayList<Point> pointsList = new ArrayList<Point>(contour.toList());
-		pointsList.sort(Comparator.comparingDouble((c) -> c.y));
+		pointsList.sort(Comparator.comparingDouble((c) -> c.x));
 		//putting top 25% of points in one ArrayList, bottom 25% in another
-		ArrayList<Point> topPoints = new ArrayList<Point>();
+		/*ArrayList<Point> topPoints = new ArrayList<Point>();
 		ArrayList<Point> bottomPoints = new ArrayList<Point>();
 		for(int a = 0; a < pointsList.size()/4; a++){
 			bottomPoints.add(pointsList.get(a));
 			topPoints.add(pointsList.get(pointsList.size() - 1 - a));
-		}
+		}*/
 		//sorting top & bottom point lists by ascending x coordinate
-		bottomPoints.sort(Comparator.comparingDouble((c) -> c.x));
+		/*bottomPoints.sort(Comparator.comparingDouble((c) -> c.x));
 		topPoints.sort(Comparator.comparingDouble((c) -> c.x));
 		//deciding whether to check for leftmost or rightmost points in contour
 		int pointIndex = getDistFromCenter(contour) <= 0 ? bottomPoints.size() - 1 : 0;
 		//seeing if bottom points are to the left or right of top points (/ or \)
-		return bottomPoints.get(pointIndex).x - topPoints.get(pointIndex).x <= 0;
+		return bottomPoints.get(pointIndex).x - topPoints.get(pointIndex).x >= 0;
+		*/
+		return pointsList.get(0).y > pointsList.get(pointsList.size() - 1).y;
 	}
 	public double getDistFromCenter(MatOfPoint contour){
 		//negative if left of center, positive if right

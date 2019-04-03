@@ -271,6 +271,7 @@ public final class Main {
       // something like this for GRIP:
       VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
+                System.out.println("Vision Mode: " + ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false));
                 outputStream.putFrame(pipeline.outputImg);
                  //controlling camera exposure
                   //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);

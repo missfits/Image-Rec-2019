@@ -51,9 +51,9 @@ public class GripPipeline implements VisionPipeline {
 		Core.flip(source0,outputImg,-1);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = outputImg;
-		double[] hslThresholdHue = {30, 125};
-		double[] hslThresholdSaturation = {51, 255};
-		double[] hslThresholdLuminance = {165, 255};
+		double[] hslThresholdHue = {0, 180};
+		double[] hslThresholdSaturation = {181, 255};
+		double[] hslThresholdLuminance = {179, 255};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
 
 		// Step Blur0:
@@ -75,7 +75,7 @@ public class GripPipeline implements VisionPipeline {
 		double filterContoursMaxWidth = 1000;
 		double filterContoursMinHeight = 5.0;
 		double filterContoursMaxHeight = 1000;
-		double[] filterContoursSolidity = {59.95203007897024, 100.0};
+		double[] filterContoursSolidity = {79, 100.0};
 		double filterContoursMaxVertices = 1000000;
 		double filterContoursMinVertices = 0;
 		double filterContoursMinRatio = 0;
@@ -103,7 +103,8 @@ public class GripPipeline implements VisionPipeline {
 					//get middle 2 contours
 					int center = centerIndex(filterContoursOutput);
 					targets[0] = filterContoursOutput.get(center);
-					targets[1] = filterContoursOutput.get(center + (isTiltedClockwise(targets[0]) ? 1 : -1));
+					int secondTargetIndex = center + (isTiltedClockwise(targets[0]) ? 1 : -1);
+					targets[1] = filterContoursOutput.get(!(secondTargetIndex >= filterContoursOutput.size() || secondTargetIndex < 0) ? secondTargetIndex : center);
 					//if chosen contours are \ /, shift left in the list of contours
 					/*if(!(isTiltedClockwise(targets[0]) && !isTiltedClockwise(targets[1]))){
 						targets[1] = targets[0];

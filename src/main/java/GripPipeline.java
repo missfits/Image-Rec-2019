@@ -48,13 +48,18 @@ public class GripPipeline implements VisionPipeline {
 	public double midOffset, sideOffset;
 	public void process(Mat source0) {
 		//outputImg = source0;
+		double startTime = System.currentTimeMillis();
+
 		Core.flip(source0,outputImg,-1);
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = outputImg;
-		double[] hslThresholdHue = {0, 180};
-		double[] hslThresholdSaturation = {181, 255};
-		double[] hslThresholdLuminance = {179, 255};
+		double[] hslThresholdHue = {64, 111};
+		double[] hslThresholdSaturation = {191, 255};
+		double[] hslThresholdLuminance = {78, 245};
 		hslThreshold(hslThresholdInput, hslThresholdHue, hslThresholdSaturation, hslThresholdLuminance, hslThresholdOutput);
+
+		double hslTime = System.currentTimeMillis();
+		System.out.println("hsl: " + (hslTime - startTime));
 
 		// Step Blur0:
 		Mat blurInput = hslThresholdOutput;
@@ -62,10 +67,16 @@ public class GripPipeline implements VisionPipeline {
 		double blurRadius = 2;
 		blur(blurInput, blurType, blurRadius, blurOutput);
 
+		double blurTime = System.currentTimeMillis();
+		System.out.println("blur: " + (blurTime - hslTime));
+
 		// Step Find_Contours0:
 		Mat findContoursInput = blurOutput;
 		boolean findContoursExternalOnly = false;
 		findContours(findContoursInput, findContoursExternalOnly, findContoursOutput);
+
+		double findContoursTime = System.currentTimeMillis();
+		System.out.println("find contours: " + (findContoursTime - blurTime));
 
 		// Step Filter_Contours0:
 		ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
@@ -81,10 +92,10 @@ public class GripPipeline implements VisionPipeline {
 		double filterContoursMinRatio = 0;
 		double filterContoursMaxRatio = 1000;
 		filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio, filterContoursOutput);
-		//System.out.println("Countours: " + filterContoursOutput.size());
-		/*for(int a = 0; a < filterContoursOutput.size(); a ++){
-			System.out.println(filterContoursOutput.get(a).toList());
-		}*/
+		
+		double filterContoursTime = System.currentTimeMillis();
+		System.out.println("filter contours: " + (filterContoursTime - findContoursTime));
+
 		if(table.getEntry("Vision Mode").getBoolean(false)){
 			Imgproc.line(outputImg, new Point(outputImg.width()/2,0), new Point(outputImg.width()/2, outputImg.height()), new Scalar(255,0,0), 1);
 			//Imgproc.circle(outputImg, new Point(outputImg.width()/2, outputImg.height()/2), 2, new Scalar(255,0,0), -1);
@@ -137,7 +148,10 @@ public class GripPipeline implements VisionPipeline {
 				//negative if center is to the left of midpoint
 				midOffset = 0.5 - (midpoint/outputImg.width());
 				//if offset is positive, want right contour
-				sideOffset = 0.5 - (findAverageX(midOffset > 0? rightContour : leftContour)/outputImg.width());
+				//sideOffset = 0.5 - (findAverageX(midOffset > 0? rightContour : leftContour)/outputImg.width());
+				
+				double findMiddleTime = System.currentTimeMillis();
+				System.out.println("find center: " + (findMiddleTime- filterContoursTime));
 			}
 		}
 	}

@@ -260,7 +260,7 @@ public final class Main {
     }
 
     CvSource outputStream = CameraServer.getInstance().putVideo("Test", 416, 240); 
-    
+    MjpegServer chosenCamera = CameraServer.getInstance().addSwitchedCamera("Jacob");
     // start image processing on camera 0 if present
     if (cameras.size() >= 1) {
      /* VisionThread visionThread = new VisionThread(cameras.get(0),

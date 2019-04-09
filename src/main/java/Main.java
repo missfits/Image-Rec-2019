@@ -260,32 +260,39 @@ public final class Main {
     }
 
     CvSource outputStream = CameraServer.getInstance().putVideo("Test", 416, 240); 
-    MjpegServer chosenCamera = CameraServer.getInstance().addSwitchedCamera("Jacob");
+    //MjpegServer chosenCamera = CameraServer.getInstance().addSwitchedCamera("Jacob");
     // start image processing on camera 0 if present
-    if (cameras.size() >= 1) {
-     /* VisionThread visionThread = new VisionThread(cameras.get(0),
-              new MyPipeline(), pipeline -> {
-               // outputStream.putFrame(pipeline.outputImg);
-        // do something with pipeline results
-      });*/
-      // something like this for GRIP:
-      VisionThread visionThread2 = new VisionThread(cameras.get(0),
+    if (cameras.size() >= 2) {
+      BetterVisionRunner<GripPipeline> runner = new BetterVisionRunner<GripPipeline>(cameras.get(1),cameras.get(0),new GripPipeline(),pipeline -> {
+          //System.out.println("Vision Mode: " + ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false));
+          outputStream.putFrame(pipeline.outputImg);
+           //controlling camera exposure
+            //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);
+            boolean reverseMode = ntinst.getTable("RaspberryPi").getEntry("Reverse Drive").getBoolean(false);
+            UsbCamera camInUse = cameras.get(reverseMode ? 0 : 1);
+            if(ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false)){
+              camInUse.setExposureManual(10);
+            }else{
+              camInUse.setExposureAuto();
+            }
+          ntinst.getTable("RaspberryPi").getEntry("Center Offset").setNumber(pipeline.midOffset);
+          //ntinst.getTable("RaspberryPi").getEntry("Side Offset").setNumber(pipeline.sideOffset);
+      });
+      Thread visionThread = new Thread(runner :: runForever);
+     
+      /*VisionThread visionThread2 = new VisionThread(cameras.get(0),
               new GripPipeline(), pipeline -> {
-                //System.out.println("Vision Mode: " + ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false));
                 outputStream.putFrame(pipeline.outputImg);
-                 //controlling camera exposure
-                  //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);
                   if(ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false)){
                     cameras.get(0).setExposureManual(10);
                   }else{
                     cameras.get(0).setExposureAuto();
                   }
                 ntinst.getTable("RaspberryPi").getEntry("Center Offset").setNumber(pipeline.midOffset);
-                //ntinst.getTable("RaspberryPi").getEntry("Side Offset").setNumber(pipeline.sideOffset);
-      });
+      });*/
       
-      //visionThread.start();
-      visionThread2.start();
+      visionThread.start();
+      //visionThread2.start();
     }
 
     // loop forever

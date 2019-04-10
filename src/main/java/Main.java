@@ -23,6 +23,7 @@ import edu.wpi.cscore.MjpegServer;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoSource;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.networktables.EntryListenerFlags;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.vision.VisionPipeline;
 import edu.wpi.first.vision.VisionThread;
@@ -190,7 +191,6 @@ public final class Main {
     CameraServer inst = CameraServer.getInstance();
     UsbCamera camera = new UsbCamera(config.name, config.path);
     MjpegServer server = inst.startAutomaticCapture(camera);
-    
     Gson gson = new GsonBuilder().create();
 
     camera.setConfigJson(gson.toJson(config.config));
@@ -259,6 +259,21 @@ public final class Main {
       cameras.add(startCamera(cameraConfig));
     }
 
+    ntinst.getTable("RaspberryPi").addEntryListener("Vision Mode",(table,key,entry,value,flags) ->{
+      System.out.println("Changing Exposure " + value.getBoolean());
+      if(value.getBoolean()){
+        for(UsbCamera camera : cameras){
+          camera.setExposureManual(0);
+          camera.getProperty("raw_exposure_absolute").set(10);
+        }
+      }else{
+        for(UsbCamera camera : cameras){
+          camera.setExposureAuto();
+        }
+      }
+    }, EntryListenerFlags.kNew |  EntryListenerFlags.kUpdate);
+    //TEMPORARY
+    cameras.get(0).getProperty("raw_exposure_absolute").set(10);
     CvSource outputStream = CameraServer.getInstance().putVideo("Test", 416, 240); 
     //MjpegServer chosenCamera = CameraServer.getInstance().addSwitchedCamera("Jacob");
     // start image processing on camera 0 if present
@@ -266,15 +281,7 @@ public final class Main {
       BetterVisionRunner<GripPipeline> runner = new BetterVisionRunner<GripPipeline>(cameras.get(1),cameras.get(0),new GripPipeline(),pipeline -> {
           //System.out.println("Vision Mode: " + ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false));
           outputStream.putFrame(pipeline.outputImg);
-           //controlling camera exposure
-            //ntinst.getTable("Raspberry Pi").getEntry("Vision Mode").setBoolean(true);
-            boolean reverseMode = ntinst.getTable("RaspberryPi").getEntry("Reverse Drive").getBoolean(false);
-            UsbCamera camInUse = cameras.get(reverseMode ? 0 : 1);
-            if(ntinst.getTable("RaspberryPi").getEntry("Vision Mode").getBoolean(false)){
-              camInUse.setExposureManual(10);
-            }else{
-              camInUse.setExposureAuto();
-            }
+
           ntinst.getTable("RaspberryPi").getEntry("Center Offset").setNumber(pipeline.midOffset);
           //ntinst.getTable("RaspberryPi").getEntry("Side Offset").setNumber(pipeline.sideOffset);
       });

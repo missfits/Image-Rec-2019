@@ -49,8 +49,13 @@ public class GripPipeline implements VisionPipeline {
 	public void process(Mat source0) {
 		//outputImg = source0;
 		double startTime = System.currentTimeMillis();
-
-		Core.flip(source0,outputImg,-1);
+		
+		if(!table.getEntry("Reverse Drive").getBoolean(false)){
+			Core.flip(source0,outputImg,-1);
+		}else{
+			outputImg = source0;
+		}
+		
 		// Step HSL_Threshold0:
 		Mat hslThresholdInput = outputImg;
 		double[] hslThresholdHue = {64, 111};

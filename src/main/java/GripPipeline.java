@@ -157,6 +157,8 @@ public class GripPipeline implements VisionPipeline {
 				
 				double findMiddleTime = System.currentTimeMillis();
 				//System.out.println("find center: " + (findMiddleTime- filterContoursTime));
+			}else{
+				midOffset = 0;
 			}
 		}
 	}
